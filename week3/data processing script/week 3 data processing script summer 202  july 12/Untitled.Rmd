@@ -1,0 +1,96 @@
+---
+title: "melissa"
+output: pdf_document
+date: "`r Sys.Date()`"
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#Packages 
+library(stringr)
+library(knitr)
+```
+
+
+```{r load}
+# load the raw data 
+rawDATA<-read.csv("week3/raw data /Week 3 Example Data.csv")
+
+#create a copy of the raw data
+data <-rawDATA 
+```
+
+```{r restructure}
+#rename TIPI columns
+colnames(data)[6:15] <- paste0("tipi",
+                               rep(c("E","A","C","N","O"),2),1:10)
+
+colnames(data)[c(7,11,13:15)]  <- paste0(colnames(data)[c(7,11,13:15)],"R")
+
+###Restructure Variable###
+
+#split the condition varible into two columns
+conditionSplit<-str_split_fixed(data$condition,"_",2)
+#remanes the newely created condtion variable
+colnames(conditionSplit)<-c("shockCause","pMoral")
+#add tje spli columns back to the data
+data <- cbind(data,conditionSplit)
+
+data <- data[,-4]
+#recode 
+data$guilt <-ifelse(data$guilt ==-99, NA, data$guilt)
+```
+
+```{r compute}
+data[,c(6,10,12:14)]<-(-1*data[,c(6,10,12:14)])+8
+#compute composite personality score
+data$extra<-rowMeans(data[,c(5,10)])
+data$agreea<-rowMeans(data[,c(6,11)])
+data$consc<-rowMeans(data[,c(7,12)])
+data$nuero<-rowMeans(data[,c(8,13)])
+data$open<-rowMeans(data[,c(9,14)])
+```
+
+```{r codebook}
+
+data<-data[,c(1:3,5:14,20:24,4,18:19,15:17)]
+
+codebook <- data.frame("variable"=colnames(data))
+
+codebook$description<-c("Partcipant ID number",
+                        "Particpant",
+                        "Sex",
+                        "Age",
+                        "TIPI Extraversion",
+                        "TIPI Agreeableness",
+                        "TIPI Concentionous",
+                        "TIPI Openness",
+                        "TIPI Agreeableness 1(R)",
+                        "TIPI Connscientiousness 1",
+                        "TIPI Nuerotismim 2(R)",
+                        "TIPI Openesses 2 (R)",
+                        "Composite Extraversion",
+                        "Composoite Agreeablness",
+                        "Composite Openness",
+                        "Shock Voltage",
+                        "Shock Cause",
+                        "Shock Cause (partcipant vs. partner",
+                        "partner morality (good vs. bad",
+                        "Amount of $ shared with partner (preshock)",
+                        "Amount of $ shared with partner(post-shock",
+                        "Guilt reported back by partcipant")
+#save the data type for each variable
+codebook$type<-sapply(data,class)
+
+#output the codebook as a table
+kable(codebook)
+                        
+                        
+
+
+```
+
+```{r save}
+write.csv(data, "week3/raw data /Week 3 Example Data.csv")
+```
