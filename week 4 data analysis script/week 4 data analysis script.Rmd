@@ -1,0 +1,177 @@
+---
+title: "week 4 data analysis"
+author: "mel"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(reshape2)
+```
+
+## Overview
+This report presents preliminary data analysis for the week 3 example data. Specfically, this will report basic descriptive statisitcs as well as report tests of the following predictions.
+
+1. People will feel more guilt when: 
+  + 1.1 They caused the shock (vs. their partner)
+  + 1.2 Their partne was morall good (vs. bad)
+  +1.3 The shock was stronger (high > medium > low)
+2. Wome will report more guilt tha men 
+3. Agreeable people will report more guilt 
+4. Nuerotic people will report more guilt 
+
+and 
+
+5. People will be more generous when: 
+  + 5.1 They caused the shock (vs. their partner)
+  + 5.2 The partner was morally good (vs. bad) 
+  + 5.3 The shock was stronger (high > med > low)
+6. Womne will be more generous than men 
+7. Agrreable peopl will be more genrous 
+8. Nuerotic people will be more generous 
+
+
+```{r load data}
+data <- read.csv("week3/processed data/Week 3 Example Data PROCESSED.csv")
+
+#recode varibles 
+#grab PIN vecotr and overide it with a categorlcal version of itself
+data$PIN <-as.factor(data$PIN)
+data$sex <-as.factor (data$sex)
+data$shock <-as.factor(data$shock)
+data$shockCause <- as.factor(data$shockCause)
+data$pMoral <- as.factor( data$pMoral)
+```
+
+#descriptive statisitcs  for guilt: 
+summary function: min, max, mean, quartiles
+sd: standard deviation
+na.rm : remove missing values 
+```{r descGuilt}
+c(summary(data$guilt), "SD" = sd(data$guilt,na.rm =T))
+
+```
+ # genersority descriptives
+```{r descgenerosity}
+#generosity before the shock
+c(summary(data$preShare), "SD" = sd(data$preShare,na.rm =T))
+#generosity after shock
+c(summary(data$postShare), "SD" = sd(data$postShare,na.rm =T))
+
+```
+ 
+```{r descpersonality}
+#agreeableness
+c(summary(data$agreea), "SD" = sd(data$agreea,na.rm =T))
+#Nuero
+c(summary(data$nuero), "SD" = sd(data$nuero,na.rm =T))
+```
+
+
+#guilt analysis
+
+### Prediction 1
+```{r p1.1}
+#run t-tes.for prediction 1.1
+p1.1 <- t.test(data$guilt~data$shockCause)
+
+#outout the result 
+p1.1
+```
+Prediction 1.1 was supported
+People who caused the shock felt more guilty when they caused the shock than when their partner did: 
+
+
+```{r p1.2}
+#Run the t.test fo prediction 1.2
+p1.2 <- t.test(data$guilt~data$pMoral)
+```
+Prediction 1.2 was supported
+People felt more guily when their partner was morally good
+
+```{r p1.3}
+#lm: linear model
+#data = dataframe
+# run the one-way anova for prediction for 1.3
+p1.3 <- lm(guilt~shock, data=data)
+
+#output the results 
+anova(p1.3)
+
+#output group means 
+#help
+tapply(data$guilt, data$shock,function(x) mean(x,na.rm=T))
+```
+prediction 1.3 was supported. people felt more guilty when their partner recived a stronger shock: 
+
+
+#Prediction 2
+t test
+```{r p2}
+#run the t-test for prediction 2
+p2 <- t.test(data$guilt~data$sex)
+
+#output the result 
+p2
+```
+no sig difference
+Prediction 2 was not supported. Women did not report more guilt than men
+
+#Prediction 3
+correlation
+```{r p3}
+#run the correlation test for prediction 3
+p3 <- cor.test(data$guilt, data$agreea)
+
+#output the result
+p3
+```
+Prediction 3 was supported.  People who are more agreeable were more guilty
+close to 1 stronger, closer to 0 weaker 
+
+# Predcition 4
+correlation
+```{r p4}
+# run the correlation test for prediction 3 
+p4 <- cor.test(data$guilt, data$nuero)
+
+#output the result 
+p4
+```
+ Prediction 4 was not supported . Nuerotic people were not more guilty 
+ 
+#Generosity Analysis
+
+```{r melt}
+#melt from wide to long
+
+dataMelt <- melt(data,
+                 measure.vars = c("preShare", "postShare"),
+                 variable.name = c("prePost"),
+                 value.name = c("share")
+                 )
+
+
+```
+
+## Prediction 5.1
+two by two anova
+```{r p5.1}
+#help
+# run the within subject Anova for p5.1
+p5.1 <-aov(share~prePost*shockCause+Error(PIN), data = dataMelt)
+
+#output the results 
+summary (p5.1)
+ #output the means 
+tapply(dataMelt$share,dataMelt[,c(24,21)], function(x) mean(x,na.rm=T)
+       )
+```
+Prediction 5.1 was supported. people were more generous when they caused the shock and *less* generous when the partner caused the shock
+
+
