@@ -1,0 +1,88 @@
+---
+title: "week 6 analysis"
+author: "mel"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r load packages}
+library(partykit)
+library(ggplot2)
+```
+
+```{r load}
+#set seed to make results reproducible
+#set seed to make data the same
+set.seed(20230802)
+
+#load data
+Data <- read.csv("week 6/Week 6 Example Data.csv")
+
+#set categorical varaible as factors: 
+Data$PIN <- as.factor(Data$PIN)
+Data$shareAmount <- as.factor(Data$shareAmount)
+Data$shareType <- as.factor(Data$shareType)
+Data$dollChoice <- as.factor(Data$dollChoice)
+```
+
+
+## Decision Tree
+Predict partcipant doll choice from age adn experimental conditons using a decsion tree
+```{r dec tree}
+#fit the decsion tree
+tree <- ctree(dollChoice ~ age + shareAmount + shareType, data = Data)
+#plot tree
+plot(tree)
+```
+
+
+## Cluster Analysis
+Assesing whether children cluster according to food prefs
+```{r cluster}
+# plotting 
+pickyplot <- ggplot(data = Data, aes(x=pickyVeg, y= pickyFruit))+
+  labs(x="Pickiness about Veggies",
+       y = "Pickiness about Fruit") + 
+  theme_gray(base_size = 20) +
+  geom_jitter()
+ 
+
+plot(pickyplot)
+
+
+# fit cluster analysis
+kFit <- kmeans(Data[,3:4], centers = 40)
+
+
+# extract means of clusters 
+
+kCenters <-kFit$centers
+
+# assign the clusters to our data
+Data$cluster <- as.factor(kFit$cluster)
+
+
+# plot data 
+pickyplot <- pickyplot +
+  aes(color = Data$cluster)+
+  labs(color= "k-Means Cluster")
+
+pickyplot
+
+# 9 times
+
+
+
+
+
+```
+
+
+
+
